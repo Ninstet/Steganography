@@ -1,0 +1,2 @@
+C:\Users\Jake\OneDrive - University of Birmingham\CCISS\Stretch Project\Steganography\Debug\Steganography.exe
+C:\Users\Jake\OneDrive - University of Birmingham\CCISS\Stretch Project\Steganography\Debug\Steganography.pdb
