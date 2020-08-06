@@ -5,5 +5,7 @@ int main() {
 	std::cout << "Hello\n\n";
 
 	PNG_File file("bueller.png");
-	file.encode("failure.txt");
+	file.encode("otter.png");
+	file.save("encode.png");
+	file.decode("decode.png");
 }

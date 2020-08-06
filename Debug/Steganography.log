@@ -1,5 +1,2 @@
-﻿  PNG_File.cpp
-C:\Users\Jake\OneDrive - University of Birmingham\CCISS\Stretch Project\Steganography\PNG_File.cpp(148,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Jake\OneDrive - University of Birmingham\CCISS\Stretch Project\Steganography\PNG_File.cpp(171,19): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Jake\OneDrive - University of Birmingham\CCISS\Stretch Project\Steganography\PNG_File.cpp(188,15): warning C4018: '>=': signed/unsigned mismatch
+﻿  Steganography.cpp
   Steganography.vcxproj -> C:\Users\Jake\OneDrive - University of Birmingham\CCISS\Stretch Project\Steganography\Debug\Steganography.exe
