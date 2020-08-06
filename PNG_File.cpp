@@ -11,6 +11,21 @@
 
 
 
+int ipow(int base, int exp) {
+    // Function for returning the power of a number as an integer
+    
+    int result = 1;
+    while (exp) {
+        if (exp & 1)
+            result *= base;
+        exp >>= 1;
+        base *= base;
+    }
+
+    return result;
+}
+
+
 unsigned int filesize(const char* filename) {
     // Function for calculating the size of a file
 
@@ -20,6 +35,7 @@ unsigned int filesize(const char* filename) {
     unsigned int size = 0;
     if (fseek(f, 0, SEEK_END) == 0)
         size = ftell(f);
+
     fclose(f);
     return size;
 }
@@ -91,7 +107,6 @@ PNG_File::PNG_File(const char* inputFileName) {
     width = png_get_image_width(read_ptr, info_ptr);
     height = png_get_image_height(read_ptr, info_ptr);
     bit_depth = png_get_bit_depth(read_ptr, info_ptr);
-    
     row_pointers = png_get_rows(read_ptr, info_ptr); // row_pointers is an array of pointers with each pointer pointing to one row of image data
 
     if (bit_depth != BYTE_SIZE) // Make sure that the bit depth is correct
@@ -100,7 +115,7 @@ PNG_File::PNG_File(const char* inputFileName) {
     fclose(inputFile); // Close the PNG file now that we have read its contents
     
     std::cout << "Done!\n";
-    std::cout << "Width: " << width << ", Height: " << height << "\n";
+    std::cout << "Width: " << width << ", Height: " << height << "\n\n";
 
 }
 
@@ -123,6 +138,8 @@ void PNG_File::encode(const char* fileToEncodeName) {
         exit(1);
     }
 
+    std::cout << "Done!\n";
+
     unsigned char buffer = 0;
     unsigned long size = filesize(fileToEncodeName);
 
@@ -132,16 +149,51 @@ void PNG_File::encode(const char* fileToEncodeName) {
         int x = 0;
 
         if (y == 0) {
+            std::cout << "Writing file size (" << size << " bytes) to first line";
+
             for (x; x < SIZE_WIDTH; x++) { // For all the bits needed to store the size of the data
-                if ((size & ipow(2, x))) {
-
+                std::cout << ".";
+                
+                if (size & ipow(2, x)) { // Encode the file size
+                    *(row_pointers[y] + x) |= 1;
                 } else {
-
+                    *(row_pointers[y] + x) &= 0;
                 }
             }
+
+            std::cout << " Done!\n";
+            std::cout << "Writing file data";
+        }
+
+        // For y = 0, x = 32 however for y > 0, x = 0
+        // Therefore we start writing after the size has been written
+
+        for (x; x < width * 3; x++) { // Loop over every column in the PNG image
+            if (x % BYTE_SIZE == 0) { // Check if one byte has been written
+                if (!fread(&buffer, 1, 1, dataFile)) { // Check if we have read entire file
+                    std::cout << " Done!\n";
+                    goto loop_end;
+                }
+            }
+            
+            std::cout << ".";
+
+            if (buffer & ipow(2, x % BYTE_SIZE)) { // Encode the file data
+                *(row_pointers[y] + x) |= 1;
+            } else {
+                *(row_pointers[y] + x) &= 0;
+            }
+        }
+
+        if (y >= height) { // Data file is too large to encode into PNG
+            exit(1);
         }
     }
+    
+    loop_end:
 
+    fclose(dataFile);
+    
 }
 
 
