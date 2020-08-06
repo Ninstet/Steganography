@@ -20,7 +20,7 @@ private:
     png_structp read_ptr;
     png_infop info_ptr;
     png_bytep* row_pointers;
-//    png_structp write_ptr;
+    png_structp write_ptr;
 
     unsigned int width;
     unsigned int height;

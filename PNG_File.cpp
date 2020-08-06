@@ -131,9 +131,9 @@ void PNG_File::encode(const char* fileToEncodeName) {
 
     // Load the file into memory
 
-    FILE* dataFile; // Attempt to open the file
+    FILE* fileToEncode; // Attempt to open the file
 
-    if (fopen_s(&dataFile, fileToEncodeName, "rb") != 0) { // Check if file is already open
+    if (fopen_s(&fileToEncode, fileToEncodeName, "rb") != 0) { // Check if file is already open
         std::cout << "ERROR: File is already open!\n";
         exit(1);
     }
@@ -141,28 +141,28 @@ void PNG_File::encode(const char* fileToEncodeName) {
     std::cout << "Done!\n";
 
     unsigned char buffer = 0;
-    unsigned long size = filesize(fileToEncodeName);
+    unsigned int size = filesize(fileToEncodeName);
 
     // Encoding the data file into the PNG image
 
     for (int y = 0; y < height; y++) { // Loop over every row in the PNG image
         int x = 0;
 
-        if (y == 0) {
-            std::cout << "Writing file size (" << size << " bytes) to first line";
+        if (y == 0) { // For the first row of the PNG image
+            std::cout << "Writing file size (" << size << " bytes) to first line... ";
 
             for (x; x < SIZE_WIDTH; x++) { // For all the bits needed to store the size of the data
-                std::cout << ".";
+                //std::cout << ".";
                 
                 if (size & ipow(2, x)) { // Encode the file size
                     *(row_pointers[y] + x) |= 1;
                 } else {
-                    *(row_pointers[y] + x) &= 0;
+                    *(row_pointers[y] + x) &= 0xFE;
                 }
             }
 
-            std::cout << " Done!\n";
-            std::cout << "Writing file data";
+            std::cout << "Done!\n";
+            std::cout << "Writing file data... ";
         }
 
         // For y = 0, x = 32 however for y > 0, x = 0
@@ -170,18 +170,18 @@ void PNG_File::encode(const char* fileToEncodeName) {
 
         for (x; x < width * 3; x++) { // Loop over every column in the PNG image
             if (x % BYTE_SIZE == 0) { // Check if one byte has been written
-                if (!fread(&buffer, 1, 1, dataFile)) { // Check if we have read entire file
-                    std::cout << " Done!\n";
+                if (!fread(&buffer, 1, 1, fileToEncode)) { // Read next byte and check if we have read the entire file
+                    std::cout << "Done!\n\n";
                     goto loop_end;
                 }
             }
             
-            std::cout << ".";
+            //std::cout << ".";
 
             if (buffer & ipow(2, x % BYTE_SIZE)) { // Encode the file data
                 *(row_pointers[y] + x) |= 1;
             } else {
-                *(row_pointers[y] + x) &= 0;
+                *(row_pointers[y] + x) &= 0xFE;
             }
         }
 
@@ -192,18 +192,104 @@ void PNG_File::encode(const char* fileToEncodeName) {
     
     loop_end:
 
-    fclose(dataFile);
+    fclose(fileToEncode);
     
 }
 
 
 
 void PNG_File::decode(const char* outputFileName) {
-    // TODO: Decoding text from PNG image
+
+    /*
+    This is the decode method for the PNG_File class.
+    This decodes the loaded PNG image and writes the
+    data to to the output file given as an argument.
+    */
+    std::cout << "Creating data file " << outputFileName << "... ";
+
+    // Prepare data file for writing
+
+    FILE* outputFile; // File we will output the data to
+
+    if (fopen_s(&outputFile, outputFileName, "wb") != 0) { // Check if file is already open
+        std::cout << "ERROR: File is already open!\n";
+        exit(1);
+    }
+
+    std::cout << "Done!\n";
+
+    unsigned char buffer = 0;
+    unsigned int size = 0;
+
+    // Decoding the data file from the PNG image
+
+    for (int y = 0; y < height; y++) { // Loop over every row in the PNG image
+        int x = 0;
+
+        if (y == 0) { // For the first row of the PNG image
+            std::cout << "Reading file size from first line... ";
+
+            for (x; x < SIZE_WIDTH; x++) { // For all the bits needed to store the size of the data
+                //std::cout << ".";
+
+                size |= (*(row_pointers[y] + x) & 1) << x;
+            }
+
+            std::cout << "Done! (" << size << " bytes)\n";
+            std::cout << "Reading file data... ";
+        }
+
+        // For y = 0, x = 32 however for y > 0, x = 0
+        // Therefore we start reading after the size has been read
+
+        for (x; x < width * 3; x++) { // Loop over every column in the PNG image
+            if ((x > SIZE_WIDTH || y > 0) && x % BYTE_SIZE == 0) { // Check if one byte has been written AND we have read at least one iteration of the PNG image
+                fwrite(&buffer, 1, 1, outputFile); // Write that char (1 byte) to the output file
+                buffer = 0; // Reset the buffer
+            }
+            
+            //std::cout << ".";
+
+            if (((width * y) * 3 + x) == size * BYTE_SIZE + SIZE_WIDTH) {
+                std::cout << "Done!\n\n";
+                goto loop_end;
+            }
+
+            buffer |= ((*(row_pointers[y] + x) & 1) << x % BYTE_SIZE); // Read the LSB from the current pixel in the PNG image
+        }
+    }
+
+    loop_end:
+
+    fclose(outputFile);
+
 }
 
 
 
-void save(const char* outputFileName) {
-    // TODO: Saving the encoded image to a file
+void PNG_File::save(const char* outputFileName) {
+    // TODO description
+
+    FILE* outputFile; // File we will output the data to
+
+    if (fopen_s(&outputFile, outputFileName, "wb") != 0) { // Check if file is already open
+        std::cout << "ERROR: File is already open!\n";
+        exit(1);
+    }
+
+    //Initialize the PNG structure for writing
+    write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+    if (!write_ptr)
+        exit(1);
+
+    png_init_io(write_ptr, outputFile);
+
+    //Set the rows in the PNG structure
+    png_set_rows(write_ptr, info_ptr, row_pointers);
+
+    //Write the rows to the file
+    png_write_png(write_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+    fclose(outputFile);
 }
