@@ -157,6 +157,11 @@ void PNG_File::encode(const char* fileToEncodeName) {
     unsigned char buffer = 0;
     unsigned int size = filesize(fileToEncodeName);
 
+    if (width * height * 3 - PNG_SIG_LEN < size * 8) { // If number of pixels * 3 - 8 (no of bits we can write to) is less than the number of bits in the data file
+        std::cout << "ERROR: Data file too large for PNG file\n";
+        exit(1);
+    }
+
     std::cout << "Done! (" << size << " bytes) \n";
 
     // Encoding the data file into the PNG image
