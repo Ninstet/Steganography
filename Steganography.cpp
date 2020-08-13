@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 
 	if (argc < 2 || argc % 2 == 1) {
 		std::cout << "ERROR: Too few arguments\n";
-		std::cout << "./Steganography <file> -e <encodefile> -d <decodedfile> -s <savedfile>\n";
+		std::cout << "Usage: ./Steganography <file> -e <encodefile> -d <decodedfile> -s <savedfile>\n";
 		exit(1);
 	}
 
