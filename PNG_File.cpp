@@ -5,9 +5,17 @@
 
 
 
+// ---------- GLOBAL VARIABLES ----------
+
+
+
 #define BYTE_SIZE 8 // Number of bits in a byte
 #define PNG_SIG_LEN 8 // Length of a PNG image signature
 #define SIZE_WIDTH 32 // The number of bits used for storing the length of a file
+
+
+
+// ---------- FUNCTIONS ----------
 
 
 
@@ -42,12 +50,18 @@ unsigned int filesize(const char* filename) {
 
 
 
+// ---------- MAIN ----------
+
+
+
 PNG_File::PNG_File(const char* inputFileName) {
     /*
     This is the constructor for the PNG_File class.
     This takes a file name as input and performs error handling whilst loading 
     the file and using the libPNG library to process the PNG image into memory.
     */
+
+    std::cout << "_____________________| LOAD |_____________________\n";
     std::cout << "Loading PNG file " << inputFileName << "... ";
 
     this->inputFileName = inputFileName; // Save the file name
@@ -114,7 +128,7 @@ PNG_File::PNG_File(const char* inputFileName) {
 
     fclose(inputFile); // Close the PNG file now that we have read its contents
     
-    std::cout << "Done!\n";
+    std::cout << "Done! (" << filesize(inputFileName) << " bytes)\n";
     std::cout << "Width: " << width << ", Height: " << height << "\n\n";
 
 }
@@ -127,6 +141,8 @@ void PNG_File::encode(const char* fileToEncodeName) {
     This takes a file name as input and performs error handling whilst loading
     and encoding the file into the preloaded PNG file.
     */
+
+    std::cout << "____________________| ENCODE |____________________\n";
     std::cout << "Loading data file " << fileToEncodeName << "... ";
 
     // Load the file into memory
@@ -138,10 +154,10 @@ void PNG_File::encode(const char* fileToEncodeName) {
         exit(1);
     }
 
-    std::cout << "Done!\n";
-
     unsigned char buffer = 0;
     unsigned int size = filesize(fileToEncodeName);
+
+    std::cout << "Done! (" << size << " bytes) \n";
 
     // Encoding the data file into the PNG image
 
@@ -149,7 +165,7 @@ void PNG_File::encode(const char* fileToEncodeName) {
         int x = 0;
 
         if (y == 0) { // For the first row of the PNG image
-            std::cout << "Writing file size (" << size << " bytes) to first line... ";
+            std::cout << "Writing file size to first line... ";
 
             for (x; x < SIZE_WIDTH; x++) { // For all the bits needed to store the size of the data
                 //std::cout << ".";
@@ -199,12 +215,13 @@ void PNG_File::encode(const char* fileToEncodeName) {
 
 
 void PNG_File::decode(const char* outputFileName) {
-
     /*
     This is the decode method for the PNG_File class.
     This decodes the loaded PNG image and writes the
     data to to the output file given as an argument.
     */
+
+    std::cout << "____________________| DECODE |____________________\n";
     std::cout << "Creating data file " << outputFileName << "... ";
 
     // Prepare data file for writing
@@ -268,7 +285,13 @@ void PNG_File::decode(const char* outputFileName) {
 
 
 void PNG_File::save(const char* outputFileName) {
-    // TODO description
+    /*
+    This is the save method for the PNG_File class.
+    This outputs the PNG image object to a PNG file.
+    */
+
+    std::cout << "_____________________| SAVE |_____________________\n";
+    std::cout << "Saving PNG image as " << outputFileName << "... ";
 
     FILE* outputFile; // File we will output the data to
 
@@ -277,19 +300,23 @@ void PNG_File::save(const char* outputFileName) {
         exit(1);
     }
 
-    //Initialize the PNG structure for writing
+    // Initialize the PNG structure for writing
+
     write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
-    if (!write_ptr)
+    if (!write_ptr) {
+        std::cout << "ERROR: Write pointer error\n";
         exit(1);
+    }
+
+    // Write the PNG rows to the PNG file
 
     png_init_io(write_ptr, outputFile);
-
-    //Set the rows in the PNG structure
     png_set_rows(write_ptr, info_ptr, row_pointers);
-
-    //Write the rows to the file
     png_write_png(write_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
     fclose(outputFile);
+
+    std::cout << "Done! (" << filesize(outputFileName) << " bytes)\n\n";
+    
 }
