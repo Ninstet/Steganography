@@ -1,6 +1,4 @@
--------------------------------
--------- STEGANOGRAPHY --------
--------------------------------
+##STEGANOGRAPHY
 
 Stretch project to implement the LSB Steganography algorithm in C++.
 
